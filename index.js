@@ -39,6 +39,7 @@ async function run() {
     try {
         const productsColection = client.db('shopitiDB').collection('products')
         const userColection = client.db('shopitiDB').collection('user')
+        const orderColection = client.db('shopitiDB').collection('addCard')
 
 
         app.post('/jwt', async (req, res) => {
@@ -52,6 +53,7 @@ async function run() {
                     httpOnly: true,
                     secure: process.env.NODE_ENV === 'production',
                     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict'
+
                 })
                 .send({ success: true })
         })
@@ -66,6 +68,9 @@ async function run() {
                 })
                 .send({ success: true })
         })
+
+
+        // user releted api
 
         app.get('/user', async (req, res) => {
             const result = await userColection.find().toArray();
@@ -105,7 +110,7 @@ async function run() {
         })
 
 
-
+        // product releted api
         app.get('/products', async (req, res) => {
             try {
                 const result = await productsColection.find().toArray();
@@ -158,6 +163,36 @@ async function run() {
 
             }
         })
+
+        // order releted api
+
+        app.get('/added-to-card/:email', async (req, res) => {
+            const email = req.params.email;
+            const filter = { email: email };
+            const options = {
+                // Include only the `title` and `imdb` fields in the returned document
+                projection: { _id: 0, img: 1, title: 1, discription: 1, price: 1, email: 1, color: 1, size: 1, ProductId: 1 },
+            };
+            try {
+                const result = await orderColection.find(filter, options).toArray();
+                res.send(result)
+            } catch (error) {
+                res.status(500).send({ message: "Internal Server Error" });
+            }
+        })
+
+        app.post('/add-to-card', async (req, res) => {
+            const body = req.body;
+            try {
+                const result = await orderColection.insertOne(body)
+                res.send(result)
+            } catch (error) {
+                res.status(500).send({ message: "Internal Server Error" });
+            }
+
+        })
+
+
 
 
 
